@@ -1,0 +1,1 @@
+cd C:\Program Files (x86)\Google\Chrome\Application && chrome.exe --remote-debugging-port=3333 --user-data-dir=C:\Users\hp\Desktop\Roshan\WhatsAppAutomation\UserDataChrome
