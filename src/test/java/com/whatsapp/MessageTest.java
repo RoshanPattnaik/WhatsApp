@@ -13,6 +13,7 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
@@ -39,27 +40,50 @@ public class MessageTest {
 		options.setExperimentalOption("debuggerAddress", "localhost:3333");
 
 		driver = new ChromeDriver(options);
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
 	}
 
 
 	@Test(dataProvider = "fetchData")
-	public void wamessageTest(Hashtable<String, String> data) {
+	public void wamessageTest(Hashtable<String, String> data) throws Exception{
 		
-		try {
-			test.info("Searching... "+ data.get("Contact Name"));
-			driver.findElement(By.xpath("//div[@title='Search input textbox']")).clear();
-			driver.findElement(By.xpath("//div[@title='Search input textbox']")).sendKeys(data.get("Contact Name"));
-			String searchResult = "//span[text()='" + data.get("Contact Name") + "']";
-			driver.findElement(By.xpath(searchResult)).click();
-			test.info("Selected..."+ data.get("Contact Name"));
-			driver.findElement(By.xpath("//div[@title='Type a message']")).sendKeys(data.get("Message"));
-			driver.findElement(By.xpath("//span[@data-testid='send']")).click();
-			test.pass("Message was successfully sent to "+ data.get("Contact Name"));
-		} catch (Exception e) {
-			test.fail("Message Could not be sent to "+ data.get("Contact Name"));
-		}
-		test.pass("Completed!!!!");
+			if(data.get("Send Message").equalsIgnoreCase("Y")) {
+				try {
+				test.info("Searching... "+ data.get("Contact Name"));
+				driver.findElement(By.xpath("//div[@title='Search input textbox']")).clear();
+				driver.findElement(By.xpath("//div[@title='Search input textbox']")).sendKeys(data.get("Contact Name"));
+				String searchResult = "(//span[text()='" + data.get("Contact Name") + "'])[1]";
+				driver.findElement(By.xpath(searchResult)).click();
+				test.info("Selected..."+ data.get("Contact Name"));
+				Thread.sleep(5000);
+				if(data.get("Attach Image").equalsIgnoreCase("Y")) {
+					driver.findElement(By.xpath("//span[@data-testid='clip']")).click();
+					driver.findElement(By.xpath("//span[@data-testid='attach-image']")).click();
+					Thread.sleep(3000);
+					test.info("Attaching Image "+ data.get("Image Path"));
+					String imgPath = data.get("Image Path");
+					//String imgPath=System.getProperty("user.dir") + "\\src\\test\\resources\\autoit\\img\\"+imgName;
+					String autoITExecutable = System.getProperty("user.dir") + "\\src\\test\\resources\\autoit\\autoit_editor.exe"+" "+imgPath;
+					Thread.sleep(10000);
+					test.info("Command to run autoit exe file "+ autoITExecutable);
+					Runtime.getRuntime().exec(autoITExecutable);
+					
+					driver.findElement(By.xpath("//div[@aria-label='Send']")).click();
+					test.info("Image attached");
+				}
+				driver.findElement(By.xpath("//div[@title='Type a message']")).sendKeys(data.get("Message"));
+				driver.findElement(By.xpath("//span[@data-testid='send']")).click();
+				test.pass("Message was successfully sent to "+ data.get("Contact Name"));
+				} catch (Exception e) {
+					test.fail("Message Could not be sent to "+ data.get("Contact Name"));
+				}
+			}else {
+				throw new SkipException("Test Case is Skipped");
+			}
+					
+			test.pass("Completed!!!!");
+		
+		
 	}
 
 	@DataProvider
